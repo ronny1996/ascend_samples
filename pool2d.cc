@@ -77,7 +77,7 @@ int main(int argc, char const* argv[]) {
           .SetAttr("ksize", std::vector<int64_t>({1, 1, 2, 2}))   // dims must be 4
           .SetAttr("strides", std::vector<int64_t>({1, 1, 1, 1})) // dims must be 4
           .SetAttr("padding_mode", "CALCULATED")
-          .SetAttr("pads", std::vector<int64_t>({0, 0, 0, 0}))
+          .SetAttr("pads", std::vector<int64_t>({0, 0, 0, 0})) // must less than ksize
           .SetAttr("data_format", "NCHW")
           .SetAttr("global_pooling", false)
           .SetAttr("ceil_mode", false)

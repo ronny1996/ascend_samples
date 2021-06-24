@@ -182,7 +182,7 @@ struct NpuRunner {
     AclSetAttr(attr, attrname, tt.size(), tt.data());
     return *this;
   }
-  Run() {
+  void Run() {
     ACL_CHECK(aclopCompileAndExecute(
         optype.c_str(), in_descs.size(), in_descs.data(), in_buffers.data(),
         out_descs.size(), out_descs.data(), out_buffers.data(), attr,
@@ -199,7 +199,7 @@ struct NpuRunner {
 };
 
 struct NpuHelper {
-  static InitAllDevices() {
+  static void InitAllDevices() {
     ACL_CHECK(aclInit(nullptr));
     for (auto i = 0; i < NpuHelper::GetDevicesCount(); i++) {
       ACL_CHECK(aclrtSetDevice(i));

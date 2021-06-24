@@ -28,4 +28,5 @@ ${CXX_TARGET}: % : %.o
 clean :
 	@rm -rf ${CXX_TARGET}
 	@rm -rf ${CXX_OBJECT}
-	@rm -rf kernel_meta fusion_result.json
+	@rm -rf kernel_meta fusion_result.json ge_check_op.json
+	@rm -rf test/kernel_meta/ test/fusion_result.json test/ge_check_op.json

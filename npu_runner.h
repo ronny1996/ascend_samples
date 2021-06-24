@@ -217,7 +217,7 @@ struct NpuHelper {
     ACL_CHECK(aclrtGetDeviceCount(&count));
     return count;
   }
-  static_cast void ExceptionCallback(aclrtExceptionInfo* exceptionInfo) {
+  static void ExceptionCallback(aclrtExceptionInfo* exceptionInfo) {
     auto deviceId = aclrtGetDeviceIdFromExceptionInfo(exceptionInfo);
     auto streamId = aclrtGetStreamIdFromExceptionInfo(exceptionInfo);
     auto taskId = aclrtGetTaskIdFromExceptionInfo(exceptionInfo);

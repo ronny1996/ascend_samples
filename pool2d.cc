@@ -19,6 +19,7 @@ int main(int argc, char const* argv[]) {
           .SetAttr("pad", std::vector<int64_t>({0, 0, 0, 0}))
           .SetAttr("dilation", std::vector<int64_t>({1, 1, 1, 1}))
           .SetAttr("ceil_mode", static_cast<int64_t>(0))
+          .SetAttr("data_format", "NCHW") // required
           .Run();
     }
     out_tensor.print();

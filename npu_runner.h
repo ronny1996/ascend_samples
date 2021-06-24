@@ -204,6 +204,7 @@ struct NpuHelper {
     for (auto i = 0; i < NpuHelper::GetDevicesCount(); i++) {
       ACL_CHECK(aclrtSetDevice(i));
     }
+    // aclrtSetExceptionInfoCallback(NpuHelper::ExceptionCallback);
   }
   static void ReleaseAllDevices() {
     for (auto i = 0; i < NpuHelper::GetDevicesCount(); i++) {
@@ -215,5 +216,31 @@ struct NpuHelper {
     uint32_t count;
     ACL_CHECK(aclrtGetDeviceCount(&count));
     return count;
+  }
+  static_cast void ExceptionCallback(aclrtExceptionInfo* exceptionInfo) {
+    auto deviceId = aclrtGetDeviceIdFromExceptionInfo(exceptionInfo);
+    auto streamId = aclrtGetStreamIdFromExceptionInfo(exceptionInfo);
+    auto taskId = aclrtGetTaskIdFromExceptionInfo(exceptionInfo);
+
+    char opName[256];
+    aclTensorDesc* inputDesc = nullptr;
+    aclTensorDesc* outputDesc = nullptr;
+    size_t inputCnt = 0;
+    size_t outputCnt = 0;
+    aclmdlCreateAndGetOpDesc(deviceId, streamId, taskId, opName, 256,
+                             &inputDesc, &inputCnt, &outputDesc, &outputCnt);
+    for (size_t i = 0; i < inputCnt; ++i) {
+      const aclTensorDesc* desc = aclGetTensorDescByIndex(inputDesc, i);
+      aclGetTensorDescAddress(desc);
+      aclGetTensorDescFormat(desc);
+    }
+    for (size_t i = 0; i < outputCnt; ++i) {
+      const aclTensorDesc* desc = aclGetTensorDescByIndex(outputDesc, i);
+      aclGetTensorDescAddress(desc);
+      aclGetTensorDescFormat(desc);
+    }
+    aclDestroyTensorDesc(inputDesc);
+    aclDestroyTensorDesc(outputDesc);
+    // print
   }
 };

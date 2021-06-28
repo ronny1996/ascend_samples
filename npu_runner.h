@@ -12,8 +12,8 @@
   do {                                                                       \
     auto status = func;                                                      \
     if (status != ACL_ERROR_NONE) {                                          \
-      std::cerr << "call " << #func << " failed : " << status << " at line " \
-                << __LINE__ << std::endl;                                    \
+      std::cerr << "call " << #func << " failed : " << status << " at file " \
+                << __FILE__ << " line " << __LINE__ << std::endl;            \
       exit(-1);                                                              \
     }                                                                        \
   } while (0)

@@ -122,16 +122,24 @@ struct NpuTensor : public AclTensor {
 
 struct NpuGaurd {
   NpuGaurd(int dev_id) {
-    /*
+    int cur_dev_id;
+    ACL_CHECK(aclrtGetDevice(&cur_dev_id));
+    if (cur_dev_id != dev_id) {
+      std::cout << "Current Device ID is " << cur_dev_id
+                << ", but get Device id is " << dev_id
+                << ".\t switch to device " << dev_id << std::endl;
       ACL_CHECK(aclrtSetDevice(dev_id));
-    */
-    // ACL_CHECK(aclrtCreateContext(&context, dev_id));
-    /*
-      ACL_CHECK(aclrtSetCurrentContext(context));
-    */
+      // ACL_CHECK(aclrtCreateContext(&context, dev_id));
+      // ACL_CHECK(aclrtSetCurrentContext(context));
+      prev_dev_id = cur_dev_id;
+    }
     ACL_CHECK(aclrtCreateStream(&stream));
   }
+
   ~NpuGaurd() {
+    if (prev_dev_id != -1) {
+      ACL_CHECK(aclrtSetDevice(prev_dev_id));
+    }
     if (stream) {
       ACL_CHECK(aclrtSynchronizeStream(stream));
       ACL_CHECK(aclrtDestroyStream(stream));
@@ -142,6 +150,9 @@ struct NpuGaurd {
   }
   aclrtContext context = nullptr;
   aclrtStream stream = nullptr;
+
+private:
+  int prev_dev_id = -1;
 };
 
 struct NpuRunner {
@@ -188,7 +199,6 @@ struct NpuRunner {
         out_descs.size(), out_descs.data(), out_buffers.data(), attr,
         ACL_ENGINE_SYS, ACL_COMPILE_SYS, NULL, gaurd.stream));
   }
-
   NpuGaurd gaurd;
   std::vector<aclTensorDesc*> in_descs;
   std::vector<aclDataBuffer*> in_buffers;
@@ -199,6 +209,13 @@ struct NpuRunner {
 };
 
 struct NpuHelper {
+  static void SetDevice(int dev_id) {
+    if (dev_id > NpuHelper::GetDevicesCount() || dev_id < 0) {
+      std::cerr << "dev_id > NpuHelper::GetDevicesCount() || dev_id < 0" << std::endl;
+    } else {
+      aclrtSetDevice(dev_id);
+    }
+  }
   static void InitAllDevices() {
     ACL_CHECK(aclInit(nullptr));
     for (auto i = 0; i < NpuHelper::GetDevicesCount(); i++) {

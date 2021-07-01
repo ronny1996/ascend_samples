@@ -4,6 +4,7 @@
 int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(0);
   { // ExpandD + TileWithAxis = Broadcast
     NpuTensor<float> x_tensor({2, 3}, {1, 2, 3, 4, 5, 6});
     NpuTensor<float> out_tensor({2, 2, 3, 1});

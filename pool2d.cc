@@ -4,6 +4,7 @@
 int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(0);
   // avg pool
   {
     NpuTensor<float> x_tensor({1, 1, 2, 2}, {1, 5, 2, 2});

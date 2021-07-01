@@ -4,6 +4,7 @@
 int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(0);
   {
     NpuTensor<float> x_tensor({1, 1, 3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
     NpuTensor<float> filter_tensor({1, 1, 2, 2}, {1, 2, 3, 4}); //ACL_FORMAT_FRACTAL_Z);

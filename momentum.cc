@@ -7,6 +7,7 @@
 int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(0);
   {
     NpuTensor<float> var_tensor({5}, {1, 1, 1, 1, 1});
     NpuTensor<float> accum_tensor({5}, {0, 0, 0, 0, 0});

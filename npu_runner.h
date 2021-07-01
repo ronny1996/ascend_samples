@@ -137,15 +137,15 @@ struct NpuGaurd {
   }
 
   ~NpuGaurd() {
-    if (prev_dev_id != -1) {
-      ACL_CHECK(aclrtSetDevice(prev_dev_id));
-    }
     if (stream) {
       ACL_CHECK(aclrtSynchronizeStream(stream));
       ACL_CHECK(aclrtDestroyStream(stream));
     }
     if (context) {
       ACL_CHECK(aclrtDestroyContext(context));
+    }
+    if (prev_dev_id != -1) {
+      ACL_CHECK(aclrtSetDevice(prev_dev_id));
     }
   }
   aclrtContext context = nullptr;

@@ -4,6 +4,7 @@
 int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(0);
   {
     NpuTensor<float> x_tensor({2, 2, 2}, {1, 2, 3, 4, 5, 6, 7, 8});
     NpuTensor<int64_t> perm_tensor({3}, {0, 2, 1});

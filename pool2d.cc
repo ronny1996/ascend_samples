@@ -7,37 +7,43 @@ int main(int argc, char const* argv[]) {
   NpuHelper::SetDevice(0);
   // avg pool
   {
-    NpuTensor<float> x_tensor({1, 1, 2, 2}, {1, 5, 2, 2});
-    NpuTensor<float> out_tensor({1, 1, 1, 1});
+    std::vector<int64_t> x_tensor_shape({2, 2, 4, 4});
+    NpuTensor<float> x_tensor(x_tensor_shape);
+    std::vector<int64_t> out_tensor_shape({2, 2, 2, 2});
+    NpuTensor<float> out_tensor(out_tensor_shape);
+    std::vector<int64_t> ksize({2, 2});
+    std::vector<int64_t> stride({2, 2});
+    std::vector<int64_t> pad({0,0,0,0});
     {
-      NpuRunner runner("Pooling");
+      NpuRunner runner("AvgPoolV2");
       runner.AddInput(x_tensor)
           .AddOutput(out_tensor)
-          .SetAttr("mode", static_cast<int64_t>(1)) // max:0 avg:1
+          .SetAttr("ksize", std::vector<int64_t>({1, 1, ksize[0], ksize[1]}))   // dims must be 4
+          .SetAttr("strides", std::vector<int64_t>({1, 1, stride[0], stride[1]})) // dims must be 4
+          .SetAttr("padding_mode", "CALCULATED")
+          .SetAttr("pads", pad)
+          .SetAttr("data_format", "NCHW")
           .SetAttr("global_pooling", false)
-          .SetAttr("window", std::vector<int64_t>({2, 2}))
-          .SetAttr("stride", std::vector<int64_t>({1, 1}))
-          .SetAttr("pad", std::vector<int64_t>({0, 0, 0, 0}))
-          .SetAttr("dilation", std::vector<int64_t>({1, 1, 1, 1}))
-          .SetAttr("ceil_mode", static_cast<int64_t>(0))
-          .SetAttr("data_format", "NCHW") // required
+          .SetAttr("ceil_mode", false)
+          .SetAttr("exclusive", true)
           .Run();
     }
     out_tensor.print();
 
-    NpuTensor<float> x_grad_tensor({1, 1, 2, 2});
-    NpuTensor<float> out_grad_tensor({1, 1, 1, 1}, {1});
-    NpuTensor<float> inpu_shape_tensor({4}, {1, 1, 2, 2});
+    NpuTensor<float> x_grad_tensor(x_tensor_shape);
+    NpuTensor<float> out_grad_tensor(out_tensor_shape);
+    NpuTensor<int32_t> inpu_shape_tensor({4}, {2, 2, 2, 2});
     {
-      NpuRunner runner("AvgPoolV2GradD");
+      NpuRunner runner("AvgPoolV2Grad");
       runner
+          .AddInput(inpu_shape_tensor)
           .AddInput(out_grad_tensor)
           .AddOutput(x_grad_tensor)
-          .SetAttr("orig_input_shape", std::vector<int64_t>({1, 1, 2, 2}))
-          .SetAttr("ksize", std::vector<int64_t>({1, 1, 2, 2}))   // dims must be 4
-          .SetAttr("strides", std::vector<int64_t>({1, 1, 1, 1})) // dims must be 4
+          // .SetAttr("orig_input_shape", x_tensor_shape)
+          .SetAttr("ksize", std::vector<int64_t>({1, 1, ksize[0], ksize[1]}))   // dims must be 4
+          .SetAttr("strides", std::vector<int64_t>({1, 1, stride[0], stride[1]})) // dims must be 4
           .SetAttr("padding_mode", "CALCULATED")
-          .SetAttr("pads", std::vector<int64_t>({0, 0, 0, 0}))
+          .SetAttr("pads", pad)
           .SetAttr("data_format", "NCHW")
           .SetAttr("global_pooling", false)
           .SetAttr("ceil_mode", false)

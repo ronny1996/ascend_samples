@@ -120,8 +120,8 @@ struct NpuTensor : public AclTensor {
   std::vector<int64_t> dims;
 };
 
-struct NpuGaurd {
-  NpuGaurd(int dev_id) {
+struct NpuGuard {
+  NpuGuard(int dev_id) {
     int cur_dev_id;
     ACL_CHECK(aclrtGetDevice(&cur_dev_id));
     if (cur_dev_id != dev_id) {
@@ -136,7 +136,7 @@ struct NpuGaurd {
     ACL_CHECK(aclrtCreateStream(&stream));
   }
 
-  ~NpuGaurd() {
+  ~NpuGuard() {
     if (stream) {
       ACL_CHECK(aclrtSynchronizeStream(stream));
       ACL_CHECK(aclrtDestroyStream(stream));
@@ -156,7 +156,7 @@ private:
 };
 
 struct NpuRunner {
-  NpuRunner(std::string optype_, int devid = 0) : optype(optype_), gaurd(0) {
+  NpuRunner(std::string optype_, int devid = 0) : optype(optype_), guard(0) {
     attr = aclopCreateAttr();
   }
   ~NpuRunner() { aclopDestroyAttr(attr); }
@@ -197,9 +197,10 @@ struct NpuRunner {
     ACL_CHECK(aclopCompileAndExecute(
         optype.c_str(), in_descs.size(), in_descs.data(), in_buffers.data(),
         out_descs.size(), out_descs.data(), out_buffers.data(), attr,
-        ACL_ENGINE_SYS, ACL_COMPILE_SYS, NULL, gaurd.stream));
+        ACL_ENGINE_SYS, ACL_COMPILE_SYS, NULL, guard.stream));
   }
-  NpuGaurd gaurd;
+
+  NpuGuard guard;
   std::vector<aclTensorDesc*> in_descs;
   std::vector<aclDataBuffer*> in_buffers;
   std::vector<aclTensorDesc*> out_descs;
@@ -259,5 +260,14 @@ struct NpuHelper {
     aclDestroyTensorDesc(inputDesc);
     aclDestroyTensorDesc(outputDesc);
     // print
+  }
+  static void GetRecentErrorMessage() {
+      const char *aclRecentErrMsg = nullptr;
+      aclRecentErrMsg = aclGetRecentErrMsg();
+      if (aclRecentErrMsg != nullptr) {
+        printf("%s\n", aclRecentErrMsg);
+      } else {
+        printf("Failed to get recent error message.\n");
+      }
   }
 };

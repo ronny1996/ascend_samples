@@ -4,6 +4,7 @@
 #include <memory>
 #include <numeric>
 #include <vector>
+#include <type_traits>
 
 #include "acl/acl.h"
 #include "acl/acl_op_compiler.h"
@@ -70,8 +71,16 @@ struct AclTensor {
   aclFormat format;
 };
 
-template <typename T>
+template <typename TensorType>
 struct NpuTensor : public AclTensor {
+  using T = typename std::remove_cv<TensorType>::type;
+
+  NpuTensor() {
+    format = ACL_FORMAT_UNDEFINED;
+    desc = aclCreateTensorDesc(ACL_DT_UNDEFINED, 0, nullptr, ACL_FORMAT_UNDEFINED);
+    buffer = aclCreateDataBuffer(nullptr, 0);
+  }
+
   NpuTensor(const std::vector<int64_t>& dims_,
             aclFormat format_ = ACL_FORMAT_NCHW)
       : NpuTensor(dims_,
@@ -93,17 +102,30 @@ struct NpuTensor : public AclTensor {
     ACL_CHECK(aclrtMemcpy(dev_ptr, dev_size, host_data.data(), dev_size,
                           ACL_MEMCPY_HOST_TO_DEVICE));
     buffer = aclCreateDataBuffer(dev_ptr, dev_size);
+    if (is_const) {
+      ACL_CHECK(aclSetTensorConst(desc, dev_ptr, dev_size));
+    }
   }
 
   ~NpuTensor() {
-    ACL_CHECK(aclrtFree(dev_ptr));
-    aclDestroyTensorDesc(desc);
-    aclDestroyDataBuffer(buffer);
+    // if (!is_const) return;
+    if (format != ACL_FORMAT_UNDEFINED) {
+      ACL_CHECK(aclrtFree(dev_ptr));
+      aclDestroyTensorDesc(desc);
+      aclDestroyDataBuffer(buffer);
+    } else {
+      // aclDestroyTensorDesc(desc);
+    }
   }
 
   void sync() {
-    ACL_CHECK(aclrtMemcpy(host_data.data(), dev_size, dev_ptr, dev_size,
-                          ACL_MEMCPY_DEVICE_TO_HOST));
+    if (format != ACL_FORMAT_UNDEFINED) {
+      ACL_CHECK(aclrtMemcpy(host_data.data(), dev_size, dev_ptr, dev_size,
+                            ACL_MEMCPY_DEVICE_TO_HOST));
+    } else {
+      std::cerr << "can't sync an undefined tesnor\n";
+      exit(-1);
+    }
   }
 
   void print() {
@@ -118,6 +140,7 @@ struct NpuTensor : public AclTensor {
   void* dev_ptr;
   size_t dev_size;
   std::vector<int64_t> dims;
+  bool is_const = std::is_const<TensorType>::value;
 };
 
 struct NpuGuard {

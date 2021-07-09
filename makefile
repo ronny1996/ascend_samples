@@ -1,7 +1,7 @@
 
 .PHONY : all
 
-CXXFLAGS:= 
+CXXFLAGS:=
 CXXFLAGS+=-fpermissive -Wno-deprecated-declarations
 
 LDFLAGS:=

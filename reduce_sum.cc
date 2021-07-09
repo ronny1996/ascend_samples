@@ -5,18 +5,21 @@ int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
-  {
-    NpuTensor<float> x_tensor({2, 3, 2}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-    NpuTensor<float> out_tensor({3});
+  for (auto i = 0; i < 50000; i++) {
     {
-      NpuRunner runner("ReduceSumD");
-      runner.AddInput(x_tensor).AddOutput(
-          out_tensor)
-          .SetAttr("axes", std::vector<int64_t>({0, 2}))
-          .SetAttr("keep_dims", false)
-          .Run();
+      NpuTensor<float> x_tensor({32, 102});
+      NpuTensor<float> out_tensor({102});
+      {
+        NpuRunner runner("ReduceSumD");
+        runner.AddInput(x_tensor).AddOutput(
+            out_tensor)
+            .SetAttr("axes", std::vector<int64_t>({0}))
+            .SetAttr("keep_dims", false)
+            .Run();
+      }
+      out_tensor.print();
     }
-    out_tensor.print();
+    std::cout << "Step " << i << std::endl;
   }
   NpuHelper::ReleaseAllDevices();
   return 0;

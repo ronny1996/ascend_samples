@@ -58,9 +58,39 @@ int main(int argc, char const* argv[]) {
     }
     x_grad_tensor.print();
   }
+  {
+    NpuTensor<float> x_tensor({1, 4, 4, 1}, std::vector<float>(4 * 4, 1.0f), ACL_FORMAT_NHWC);
+    NpuTensor<float> filter_tensor({1, 1, 2, 2}, {1, 2, 3, 4}); //ACL_FORMAT_FRACTAL_Z);
+    NpuTensor<float> out_tensor({1, 3, 3, 1}, ACL_FORMAT_NHWC);
+    {
+      NpuRunner runner("Conv2D");
+      runner.AddInput(x_tensor)
+          .AddInput(filter_tensor)
+          .AddOutput(out_tensor)
+          .SetAttr("strides", std::vector<int64_t>({1, 2, 2, 1})) // dataformat is same with input, n and c must be set to 1.
+          .SetAttr("pads", std::vector<int64_t>({1, 1, 1, 1})) // t, b, l, r
+          .SetAttr("dilations", std::vector<int64_t>({1, 1, 1, 1})) // dataformat is same with input
+          .SetAttr("groups", static_cast<int64_t>(1))
+          .Run();
+    }
+    out_tensor.print();
+  }
   NpuHelper::ReleaseAllDevices();
   return 0;
 }
+
+/*
+0 0 0 0 0 0
+0 1 1 1 1 0
+0 1 1 1 1 0
+0 1 1 1 1 0
+0 1 1 1 1 0
+0 0 0 0 0 0
+
+4 7  3
+6 10 4
+2 3  1
+*/
 
 /*
 g++ conv2d.cc -fpermissive \

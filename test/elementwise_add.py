@@ -9,12 +9,17 @@ x_np = np.array(list(range(0, 3 * 4 * 2 * 2))).reshape([3, 4, 2, 2]).astype(np.f
 
 y_np = np.array([x for x in range(4 * 1 * 2)]).reshape([4, 1, 2]).astype(np.float32)
 
+x_np = np.random.random([4, 2, 3]).astype(np.float32)
+y_np = np.random.random([4]).astype(np.float32)
+# x_np = np.array([1, 2]).reshape([2]).astype(np.float32)
+# y_np = np.array([1, 2, 3, 4, 5, 6, 7, 8]).reshape([4, 2]).astype(np.float32)
 x_var = paddle.to_tensor(x_np, stop_gradient=False)
 y_var = paddle.to_tensor(y_np, stop_gradient=False)
 
-out = paddle.fluid.layers.nn.elementwise_add(x_var, y_var, axis=1)
+out = paddle.fluid.layers.nn.elementwise_add(x_var, y_var, axis=0)
 print(out)
 s = out.sum()
+print(s)
 s.backward()
 print(out.grad)
 print(x_var.grad)

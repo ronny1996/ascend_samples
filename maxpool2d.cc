@@ -17,7 +17,7 @@ int main(int argc, char const* argv[]) {
     NpuTensor<float> x_tensor(x_shape, x_data);
     NpuTensor<float> out_tensor(out_shape);
     {
-      NpuRunner runner("AvgPoolV2");
+      NpuRunner runner("MaxPoolV3");
       runner.AddInput(x_tensor)
           .AddOutput(out_tensor)
           .SetAttr("ksize", {1, 1, 2, 2}) // nchw
@@ -31,27 +31,26 @@ int main(int argc, char const* argv[]) {
           .Run();
     }
     out_tensor.print();
-#if 0
+
     NpuTensor<float> x_grad_tensor(x_shape);
-    NpuTensor<float> out_grad_tensor(out_shape,  std::vector<float>(2 * 3 * 2 * 2));
+    NpuTensor<float> out_grad_tensor(out_shape, std::vector<float>(2  *3 * 2 * 2, 1.0f));
     {
-      NpuRunner runner("AvgPoolV2GradD");
+      NpuRunner runner("MaxPoolV3Grad");
       runner
+          .AddInput(x_tensor)
+          .AddInput(out_tensor)
           .AddInput(out_grad_tensor)
           .AddOutput(x_grad_tensor)
-          .SetAttr("orig_input_shape", x_shape)
           .SetAttr("ksize", std::vector<int64_t>({1, 1, 2, 2}))   // dims must be 4
           .SetAttr("strides", std::vector<int64_t>({1, 1, 2, 2})) // dims must be 4
           .SetAttr("padding_mode", "CALCULATED")
-          .SetAttr("pads", {0, 0, 0, 0})
+          .SetAttr("pads", std::vector<int64_t>({0, 0, 0, 0})) // must less than ksize
           .SetAttr("data_format", "NCHW")
           .SetAttr("global_pooling", false)
           .SetAttr("ceil_mode", false)
-          .SetAttr("exclusive", true)
           .Run();
-    }  
+    }
     x_grad_tensor.print();
-#endif
   }
   {
     std::swap(x_shape[1], x_shape[3]);
@@ -59,7 +58,7 @@ int main(int argc, char const* argv[]) {
     NpuTensor<float> x_tensor(x_shape, x_data, ACL_FORMAT_NHWC);
     NpuTensor<float> out_tensor(out_shape, ACL_FORMAT_NHWC);
     {
-      NpuRunner runner("AvgPoolV2");
+      NpuRunner runner("MaxPoolV3");
       runner.AddInput(x_tensor)
           .AddOutput(out_tensor)
           .SetAttr("ksize", {1, 2, 2, 1}) // nchw

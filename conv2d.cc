@@ -23,7 +23,7 @@ int main(int argc, char const* argv[]) {
           .Run();
     }
     out_tensor.print();
-
+#if 1
     NpuTensor<float> out_grad_tensor({1, 1, 2, 2}, {1, 1, 1, 1});
     NpuTensor<float> filter_grad_tensor({1, 1, 2, 2});
     NpuTensor<int32_t> filter_shape_tensor({4}, {1, 1, 2, 2});
@@ -57,7 +57,9 @@ int main(int argc, char const* argv[]) {
           .Run();
     }
     x_grad_tensor.print();
+#endif
   }
+#if 0
   {
     NpuTensor<float> x_tensor({1, 4, 4, 1}, std::vector<float>(4 * 4, 1.0f), ACL_FORMAT_NHWC);
     NpuTensor<float> filter_tensor({1, 1, 2, 2}, {1, 2, 3, 4}); //ACL_FORMAT_FRACTAL_Z);
@@ -75,6 +77,7 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
+#endif
   NpuHelper::ReleaseAllDevices();
   return 0;
 }

@@ -7,9 +7,9 @@ int main(int argc, char const* argv[]) {
   NpuHelper::SetDevice(0);
 
 
-  std::vector<int64_t> x_shape({2, 3, 4, 4});
-  std::vector<int64_t> out_shape({2, 3, 2, 2}); // (n + 2p - k) / s + 1
-  std::vector<float> x_data(2 * 3 * 4 * 4);
+  std::vector<int64_t> x_shape({1, 1, 5, 5});
+  std::vector<int64_t> out_shape({1, 1, 1, 1}); // (n + 2p - k) / s + 1
+  std::vector<float> x_data(1 * 1 * 5 * 5);
   for (auto i = 0; i < x_data.size(); i++) {
     x_data[i] = i;
   }
@@ -20,20 +20,20 @@ int main(int argc, char const* argv[]) {
       NpuRunner runner("MaxPoolV3");
       runner.AddInput(x_tensor)
           .AddOutput(out_tensor)
-          .SetAttr("ksize", {1, 1, 2, 2}) // nchw
-          .SetAttr("strides", {1, 1, 2, 2})
+          .SetAttr("ksize", {1, 1, 3, 3}) // nchw
+          .SetAttr("strides", {1, 1, 1, 1})
           .SetAttr("padding_mode", "CALCULATED")
           .SetAttr("pads", {0, 0, 0, 0})
           .SetAttr("data_format", "NCHW")  // data-format of ksize and strides.
-          .SetAttr("global_pooling", false)
+          .SetAttr("global_pooling", true)
           .SetAttr("ceil_mode", false) // 0 - floor, 1 - ceil
-          .SetAttr("exclusive", true)
+          .SetAttr("exclusive", false)
           .Run();
     }
     out_tensor.print();
 
     NpuTensor<float> x_grad_tensor(x_shape);
-    NpuTensor<float> out_grad_tensor(out_shape, std::vector<float>(2  *3 * 2 * 2, 1.0f));
+    NpuTensor<float> out_grad_tensor(out_shape, std::vector<float>(1, 1.0f));
     {
       NpuRunner runner("MaxPoolV3Grad");
       runner
@@ -41,17 +41,18 @@ int main(int argc, char const* argv[]) {
           .AddInput(out_tensor)
           .AddInput(out_grad_tensor)
           .AddOutput(x_grad_tensor)
-          .SetAttr("ksize", std::vector<int64_t>({1, 1, 2, 2}))   // dims must be 4
-          .SetAttr("strides", std::vector<int64_t>({1, 1, 2, 2})) // dims must be 4
+          .SetAttr("ksize", std::vector<int64_t>({1, 1, 3, 3}))   // dims must be 4
+          .SetAttr("strides", std::vector<int64_t>({1, 1, 1, 1})) // dims must be 4
           .SetAttr("padding_mode", "CALCULATED")
           .SetAttr("pads", std::vector<int64_t>({0, 0, 0, 0})) // must less than ksize
           .SetAttr("data_format", "NCHW")
-          .SetAttr("global_pooling", false)
+          .SetAttr("global_pooling", true)
           .SetAttr("ceil_mode", false)
           .Run();
     }
     x_grad_tensor.print();
   }
+  #if 0
   {
     std::swap(x_shape[1], x_shape[3]);
     std::swap(out_shape[1], out_shape[3]);
@@ -73,6 +74,7 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
+  #endif
   NpuHelper::ReleaseAllDevices();
   return 0;
 }

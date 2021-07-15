@@ -5,6 +5,7 @@
 #include <numeric>
 #include <vector>
 #include <type_traits>
+#include <cstring>
 
 #include "acl/acl.h"
 #include "acl/acl_op_compiler.h"
@@ -29,6 +30,7 @@ class AclDataType;
     static const aclDataType type = acltype;               \
     static size_t size() { return aclDataTypeSize(type); } \
   }
+DECLAER_ACL_CPP_TYPE_MAP(ACL_UINT8, uint8_t);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_INT32, int32_t);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_INT64, int64_t);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_FLOAT, float);
@@ -69,6 +71,7 @@ struct AclTensor {
   aclTensorDesc* desc;
   aclDataBuffer* buffer;
   aclFormat format;
+  aclMemType memtype;
 };
 
 template <typename TensorType>
@@ -89,18 +92,26 @@ struct NpuTensor : public AclTensor {
                   format_) {}
 
   NpuTensor(const std::vector<int64_t>& dims_, const std::vector<T>& data_,
-            aclFormat format_ = ACL_FORMAT_NCHW)
+            aclFormat format_ = ACL_FORMAT_NCHW, aclMemType memtype_ = ACL_MEMTYPE_DEVICE)
       : host_data(data_), dims(dims_) {
     format = format_;
+    memtype = memtype_;
     desc = aclCreateTensorDesc(AclDataType<T>::type, dims.size(), dims.data(),
-                               format_);
+                              format_);
     aclSetTensorStorageFormat(desc, format_);
     aclSetTensorStorageShape(desc, dims.size(), dims.data());
-
     dev_size = host_data.size() * AclDataType<T>::size();
-    ACL_CHECK(aclrtMalloc(&dev_ptr, dev_size, ACL_MEM_MALLOC_HUGE_FIRST));
-    ACL_CHECK(aclrtMemcpy(dev_ptr, dev_size, host_data.data(), dev_size,
-                          ACL_MEMCPY_HOST_TO_DEVICE));
+    // like shape, dims ...
+    if (memtype_ == ACL_MEMTYPE_HOST) {
+      ACL_CHECK(aclSetTensorPlaceMent(desc, memtype_));
+      ACL_CHECK(aclrtMallocHost(&dev_ptr, dev_size));
+      memcpy(dev_ptr, data_.data(), dev_size);
+    } else { // ACL_MEMTYPE_DEVICE
+      ACL_CHECK(aclrtMalloc(&dev_ptr, dev_size, ACL_MEM_MALLOC_HUGE_FIRST));
+      ACL_CHECK(aclrtMemcpy(dev_ptr, dev_size, host_data.data(), dev_size,
+                              ACL_MEMCPY_HOST_TO_DEVICE));
+    }
+
     buffer = aclCreateDataBuffer(dev_ptr, dev_size);
     if (is_const) {
       ACL_CHECK(aclSetTensorConst(desc, dev_ptr, dev_size));
@@ -110,7 +121,13 @@ struct NpuTensor : public AclTensor {
   ~NpuTensor() {
     // if (!is_const) return;
     if (format != ACL_FORMAT_UNDEFINED) {
-      ACL_CHECK(aclrtFree(dev_ptr));
+      if (dev_ptr) {
+        if (memtype != ACL_MEMTYPE_HOST) {
+          ACL_CHECK(aclrtFree(dev_ptr));
+        } else {
+          ACL_CHECK(aclrtFreeHost(dev_ptr));
+        }
+      }
       aclDestroyTensorDesc(desc);
       aclDestroyDataBuffer(buffer);
     } else {

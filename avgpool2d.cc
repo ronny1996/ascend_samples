@@ -31,15 +31,17 @@ int main(int argc, char const* argv[]) {
           .Run();
     }
     out_tensor.print();
-#if 0
+#if 1
     NpuTensor<float> x_grad_tensor(x_shape);
-    NpuTensor<float> out_grad_tensor(out_shape,  std::vector<float>(2 * 3 * 2 * 2));
+    NpuTensor<float> out_grad_tensor(out_shape,  std::vector<float>(2 * 3 * 2 * 2, 1.0f));
+    NpuTensor<const int32_t> x_shape_tensor({4}, {2, 3, 4, 4}, ACL_FORMAT_NCHW, ACL_MEMTYPE_HOST); 
     {
-      NpuRunner runner("AvgPoolV2GradD");
+      NpuRunner runner("AvgPoolV2Grad");
       runner
+          .AddInput(x_shape_tensor)
           .AddInput(out_grad_tensor)
           .AddOutput(x_grad_tensor)
-          .SetAttr("orig_input_shape", x_shape)
+          // .SetAttr("orig_input_shape", x_shape)
           .SetAttr("ksize", std::vector<int64_t>({1, 1, 2, 2}))   // dims must be 4
           .SetAttr("strides", std::vector<int64_t>({1, 1, 2, 2})) // dims must be 4
           .SetAttr("padding_mode", "CALCULATED")
@@ -53,6 +55,7 @@ int main(int argc, char const* argv[]) {
     x_grad_tensor.print();
 #endif
   }
+#if 0
   {
     std::swap(x_shape[1], x_shape[3]);
     std::swap(out_shape[1], out_shape[3]);
@@ -74,6 +77,7 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
+#endif
   NpuHelper::ReleaseAllDevices();
   return 0;
 }

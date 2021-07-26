@@ -16,6 +16,7 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
+  
   NpuHelper::ReleaseAllDevices();
   return 0;
 }

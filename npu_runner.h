@@ -6,6 +6,7 @@
 #include <vector>
 #include <type_traits>
 #include <cstring>
+#include <cassert>
 
 #include "acl/acl.h"
 #include "acl/acl_op_compiler.h"
@@ -230,7 +231,7 @@ private:
 };
 
 struct NpuRunner {
-  NpuRunner(std::string optype_, int devid = 0) : optype(optype_), guard(0) {
+  NpuRunner(std::string optype_, int devid = 0) : optype(optype_), guard(devid) {
     attr = aclopCreateAttr();
   }
   ~NpuRunner() { aclopDestroyAttr(attr); }
@@ -289,20 +290,44 @@ struct NpuHelper {
       std::cerr << "dev_id > NpuHelper::GetDevicesCount() || dev_id < 0" << std::endl;
     } else {
       aclrtSetDevice(dev_id);
+      std::cout << "aclrtSetDevice(" << dev_id << ")\n";
     }
   }
-  static void InitAllDevices() {
+  static void InitAllDevices(const std::vector<int32_t>& devices) {
     ACL_CHECK(aclInit(nullptr));
-    for (auto i = 0; i < NpuHelper::GetDevicesCount(); i++) {
-      ACL_CHECK(aclrtSetDevice(i));
+    std::cout << "aclInit()\n";
+    for (auto dev_id : devices) {
+      assert(dev_id >= 0 && dev_id < NpuHelper::GetDevicesCount());
+      ACL_CHECK(aclrtSetDevice(dev_id));
+      std::cout << "aclrtSetDevice(" << dev_id << ")\n";
     }
     // aclrtSetExceptionInfoCallback(NpuHelper::ExceptionCallback);
   }
-  static void ReleaseAllDevices() {
-    for (auto i = 0; i < NpuHelper::GetDevicesCount(); i++) {
-      ACL_CHECK(aclrtResetDevice(i));
+  static void InitAllDevices() {
+    ACL_CHECK(aclInit(nullptr));
+    std::cout << "aclInit()\n";
+    for (auto dev_id = 0; dev_id < NpuHelper::GetDevicesCount(); dev_id++) {
+      ACL_CHECK(aclrtSetDevice(dev_id));
+      std::cout << "aclrtSetDevice(" << dev_id << ")\n";
+    }
+    // aclrtSetExceptionInfoCallback(NpuHelper::ExceptionCallback);
+  }
+  static void ReleaseAllDevices(const std::vector<int32_t>& devices) {
+    for (auto dev_id : devices) {
+      assert(dev_id >= 0 && dev_id < NpuHelper::GetDevicesCount());
+      ACL_CHECK(aclrtResetDevice(dev_id));
+      std::cout << "aclrtResetDevice(" << dev_id << ")\n";
     }
     ACL_CHECK(aclFinalize());
+    std::cout << "aclFinalize()\n";
+  }
+  static void ReleaseAllDevices() {
+    for (auto dev_id = 0; dev_id < NpuHelper::GetDevicesCount(); dev_id++) {
+      ACL_CHECK(aclrtResetDevice(dev_id));
+      std::cout << "aclrtResetDevice(" << dev_id << ")\n";
+    }
+    ACL_CHECK(aclFinalize());
+    std::cout << "aclFinalize()\n";
   }
   static uint32_t GetDevicesCount() {
     uint32_t count;

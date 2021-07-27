@@ -3,7 +3,7 @@
 
 int main(int argc, char const* argv[]) {
   /* code */
-  NpuHelper::InitAllDevices();
+  // NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
   // 1 2
   // 3 -4

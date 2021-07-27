@@ -4,8 +4,8 @@
 
 int main(int argc, char const* argv[]) {
   /* code */
-  NpuHelper::InitAllDevices();
-  NpuHelper::SetDevice(0);
+  // NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(5);
   {
     int groups = 3;
     #if 0
@@ -31,7 +31,7 @@ int main(int argc, char const* argv[]) {
 
     NpuTensor<float> out_tensor(out_shape);
     {
-      NpuRunner runner("Conv2D");
+      NpuRunner runner("Conv2D", 5);
       runner.AddInput(x_tensor)
           .AddInput(filter_tensor)
           .AddOutput(out_tensor)
@@ -52,8 +52,13 @@ int main(int argc, char const* argv[]) {
     }    
     NpuTensor<const int32_t> filter_shape_tensor({4}, tmp, ACL_FORMAT_NCHW, ACL_MEMTYPE_HOST); 
     {
+<<<<<<< Updated upstream
       #if 0
       NpuRunner runner("Conv2DBackpropFilter");
+=======
+      #if 1
+      NpuRunner runner("Conv2DBackpropFilter", 5);
+>>>>>>> Stashed changes
       runner.AddInput(x_tensor)
           .AddInput(filter_shape_tensor)
           .AddInput(out_grad_tensor)
@@ -117,7 +122,7 @@ int main(int argc, char const* argv[]) {
     out_tensor.print();
   }
 #endif
-  NpuHelper::ReleaseAllDevices();
+  // NpuHelper::ReleaseAllDevices();
   return 0;
 }
 

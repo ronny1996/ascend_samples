@@ -10,6 +10,33 @@
 #include "acl/acl.h"
 #include "acl/acl_op_compiler.h"
 
+namespace npu {
+  class alignas(2) float16 {
+    public:
+      uint16_t x;
+      // The following defaulted special class member functions
+      // are added to make float16 pass the std::is_trivial test
+      float16() = default;
+      float16(const float16& o) = default;
+      float16& operator=(const float16& o) = default;
+      float16(float16&& o) = default;
+      float16& operator=(float16&& o) = default;
+      ~float16() = default;
+      explicit float16(const float& fp32) {
+        // Conversion routine adapted from
+        // http://stackoverflow.com/questions/1659440/32-bit-to-16-bit-floating-point-conversion
+        float fp32_val = fp32;
+        uint32_t fp32_bits = *((uint32_t*)(&fp32_val));
+        x = ((fp32_bits >> 16) & 0x8000) | ((((fp32_bits >> 23) - 127 + 15) & 0x1f) << 10 )| ((fp32_bits >> 13) & 0x3ff);
+      }
+
+      explicit operator float() const {
+        uint32_t fp32_bits = ((this->x & 0x8000) << 16) | (((((this->x >> 10) & 0x1f) - 15 + 127) & 0xff) << 23) | ((this->x & 0x03FF) << 13);
+        return *((float*)(&fp32_bits));
+      }
+  };
+};
+
 #define ACL_CHECK(func)                                                      \
   do {                                                                       \
     auto status = func;                                                      \
@@ -32,11 +59,13 @@ class AclDataType;
   }
 DECLAER_ACL_CPP_TYPE_MAP(ACL_BOOL, bool);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_UINT8, uint8_t);
+DECLAER_ACL_CPP_TYPE_MAP(ACL_UINT16, uint16_t);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_INT8, int8_t);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_INT8, char);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_INT16, int16_t);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_INT32, int32_t);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_INT64, int64_t);
+DECLAER_ACL_CPP_TYPE_MAP(ACL_FLOAT16, npu::float16);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_FLOAT, float);
 DECLAER_ACL_CPP_TYPE_MAP(ACL_DOUBLE, double);
 
@@ -153,7 +182,7 @@ struct NpuTensor : public AclTensor {
   void print() {
     sync();
     for (auto t : host_data) {
-      std::cout << t << ',';
+      std::cout << float(t) << ',';
     }
     std::cout << '\n';
   }

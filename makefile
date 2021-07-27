@@ -5,10 +5,10 @@ CXXFLAGS:=
 CXXFLAGS+=-fpermissive -Wno-deprecated-declarations
 
 LDFLAGS:=
-LDFLAGS+=-L/usr/local/Ascend/ascend-toolkit/latest/arm64-linux/fwkacllib/lib64/
+LDFLAGS+=-L/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/fwkacllib/lib64/
 
 INCFLAGS:=
-INCFLAGS+=-I/usr/local/Ascend/ascend-toolkit/latest/arm64-linux/fwkacllib/include/
+INCFLAGS+=-I/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/fwkacllib/include/
 
 LIBS:=
 LIBS+=-lascendcl -lacl_op_compiler

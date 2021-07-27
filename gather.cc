@@ -5,6 +5,7 @@ int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
+#if 1 
   {
     std::vector<float> x_data;
     for(auto i = 0; i < 200; i++) {
@@ -28,6 +29,7 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
+#endif
   // 1 2
   // 3 -4
 

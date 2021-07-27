@@ -22,13 +22,22 @@ int main(int argc, char const* argv[]) {
   //   std::cout << "Step " << i << std::endl;
   // }
   {
-    NpuTensor<float> x_tensor({3, 4, 5});
-    NpuTensor<float> out_tensor({1});
+    NpuTensor<float> x_tensor({2, 2}, {1, 2, 3, 4});
+    NpuTensor<float> out_tensor({2});
     {
-      NpuRunner runner("ReduceMeanD");
+      NpuRunner runner("ReduceSumD");
       runner.AddInput(x_tensor)
       .AddOutput(out_tensor)
-      .SetAttr("axes", std::vector<int64_t>({0, 1, 2}))
+      .SetAttr("axes", std::vector<int64_t>({0}))
+      .SetAttr("keep_dims", false)
+      .Run();
+    }
+    out_tensor.print();
+    {
+      NpuRunner runner("ReduceSumD");
+      runner.AddInput(x_tensor)
+      .AddOutput(out_tensor)
+      .SetAttr("axes", std::vector<int64_t>({0}))
       .SetAttr("keep_dims", false)
       .Run();
     }

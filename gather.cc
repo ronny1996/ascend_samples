@@ -5,11 +5,7 @@ int main(int argc, char const* argv[]) {
   /* code */
   // NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
-<<<<<<< Updated upstream
 #if 1 
-=======
-  #if 1
->>>>>>> Stashed changes
   {
     std::vector<float> x_data;
     for(auto i = 0; i < 200; i++) {

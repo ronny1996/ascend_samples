@@ -285,6 +285,15 @@ struct NpuRunner {
 };
 
 struct NpuHelper {
+  template<typename T1, typename T2>
+  static std::vector<T1> ConvertVectorType(const std::vector<T2> &values_) {
+    std::vector<T1> value;
+    for (auto d : values_) {
+      value.push_back(static_cast<T1>(d));
+    }
+    return value;
+  }
+
   static void SetDevice(int dev_id) {
     if (dev_id > NpuHelper::GetDevicesCount() || dev_id < 0) {
       std::cerr << "dev_id > NpuHelper::GetDevicesCount() || dev_id < 0" << std::endl;

@@ -3,29 +3,29 @@
 
 int main(int argc, char const* argv[]) {
   /* code */
-  NpuHelper::InitAllDevices();
+  NpuHelper::InitAllDevices({0, 1, 2, 3, 4, 5, 7});
   NpuHelper::SetDevice(2);
   {
+    int N = 1, C = 1, H = 8, W = 8;
     std::vector<int32_t> ksize({2, 2});
     std::vector<int32_t> strides({2, 2});
-    std::vector<int32_t> pads({0, 0});
-    std::vector<int64_t> x_shape({1, 8, 8, 1});
-    auto Ho = (x_shape[2] + pads[0] * 2 - ksize[0]) / strides[0] + 1;
-    auto Wo = (x_shape[3] + pads[1] * 2 - ksize[1]) / strides[1] + 1;
-    std::vector<int64_t> out_shape({1, Ho, Wo, 1}); // (n + 2p - k) / s + 1
-
-    NpuTensor<float> x_tensor(x_shape, ACL_FORMAT_NHWC);
-    NpuTensor<float> out_tensor(out_shape, ACL_FORMAT_NHWC);
-    NpuTensor<uint16_t> mask_tensor(out_shape, ACL_FORMAT_NHWC);
+    std::vector<int32_t> pads({1, 1});
+    auto Ho = (H + pads[0] * 2 - ksize[0]) / strides[0] + 1;
+    auto Wo = (W + pads[1] * 2 - ksize[1]) / strides[1] + 1;
+    std::vector<int64_t> x_shape({N, C, H, W});
+    std::vector<int64_t> out_shape({N, C, Ho, Wo}); // (n + 2p - k) / s + 1
+    NpuTensor<npu::float16> x_tensor(x_shape);
+    NpuTensor<npu::float16> out_tensor(out_shape);
+    NpuTensor<uint16_t> mask_tensor({N, C, ksize[0] * ksize[1], Ho * Wo / 16 + 1});
     {
-      NpuRunner runner("MaxPoolWithArgmaxV1", 2);
+      NpuRunner runner("MaxPoolWithArgmaxV2", 2);
       runner.AddInput(x_tensor)
           .AddOutput(out_tensor)
           .AddOutput(mask_tensor)
           .SetAttr("ksize", {1, ksize[0], ksize[1], 1})
           .SetAttr("strides", {1, strides[0], strides[1], 1})
-          .SetAttr("pads", {pads[0], pads[0], pads[1], pads[1]})
-          .SetAttr("dtype", static_cast<int32_t>(AclDataType<float>::type))
+          .SetAttr("pads", {1, pads[0], pads[1], 1})
+          .SetAttr("dtype", static_cast<int32_t>(AclDataType<int32_t>::type))
           .SetAttr("dilation", {1, 1, 1, 1})
           .SetAttr("ceil_mode", false)
           .Run();
@@ -34,6 +34,6 @@ int main(int argc, char const* argv[]) {
     mask_tensor.print();
   }
   
-  NpuHelper::ReleaseAllDevices();
+  NpuHelper::ReleaseAllDevices({0, 1, 2, 3, 4, 5, 7});
   return 0;
 }

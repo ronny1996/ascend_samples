@@ -31,11 +31,7 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
-<<<<<<< Updated upstream
 #endif
-=======
-  #endif
->>>>>>> Stashed changes
   // 1 2
   // 3 -4
 

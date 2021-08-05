@@ -4,23 +4,29 @@
 
 int main(int argc, char const* argv[]) {
   /* code */
-  // NpuHelper::InitAllDevices();
-  NpuHelper::SetDevice(5);
+  NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(0);
   {
-    int groups = 3;
-    #if 0
-    std::vector<int64_t> x_shape({2, 3, 5, 5});
-    std::vector<int64_t> out_shape({2, 3, 3, 3});
+    int groups = 1;
+    std::vector<int64_t> x_shape({1, 2, 7, 7});
+    std::vector<int64_t> out_shape({1, 3, 7, 7});
     int Cin = x_shape[1];
     int Cout = out_shape[1];
-    std::vector<int64_t> filter_shape({Cout, Cin / groups, 3, 3});
-    #else
-    std::vector<int64_t> x_shape({2, 3, 5, 5});
-    std::vector<int64_t> out_shape({2, 3, 4, 4});
-    int Cin = x_shape[1];
-    int Cout = out_shape[1];
-    std::vector<int64_t> filter_shape({Cout, Cin / groups, 2, 2});
-    #endif
+    std::vector<int64_t> filter_shape({Cout, Cin / groups, 1, 1});
+    // int groups = 3;
+    // #if 0
+    // std::vector<int64_t> x_shape({2, 3, 5, 5});
+    // std::vector<int64_t> out_shape({2, 3, 3, 3});
+    // int Cin = x_shape[1];
+    // int Cout = out_shape[1];
+    // std::vector<int64_t> filter_shape({Cout, Cin / groups, 3, 3});
+    // #else
+    // std::vector<int64_t> x_shape({2, 3, 5, 5});
+    // std::vector<int64_t> out_shape({2, 3, 4, 4});
+    // int Cin = x_shape[1];
+    // int Cout = out_shape[1];
+    // std::vector<int64_t> filter_shape({Cout, Cin / groups, 2, 2});
+    // #endif
     size_t x_numel = std::accumulate(x_shape.begin(), x_shape.end(), 1, std::multiplies<int64_t>());
     size_t filter_numel = std::accumulate(filter_shape.begin(), filter_shape.end(), 1, std::multiplies<int64_t>());
     size_t out_numel = std::accumulate(out_shape.begin(), out_shape.end(), 1, std::multiplies<int64_t>());
@@ -31,7 +37,7 @@ int main(int argc, char const* argv[]) {
 
     NpuTensor<float> out_tensor(out_shape);
     {
-      NpuRunner runner("Conv2D", 5);
+      NpuRunner runner("Conv2D");
       runner.AddInput(x_tensor)
           .AddInput(filter_tensor)
           .AddOutput(out_tensor)

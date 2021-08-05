@@ -44,6 +44,15 @@ namespace npu {
     if (status != ACL_ERROR_NONE) {                                          \
       std::cerr << "call " << #func << " failed : " << status << " at file " \
                 << __FILE__ << " line " << __LINE__ << std::endl;            \
+      {                                                                      \
+      const char *aclRecentErrMsg = nullptr;                                 \
+      aclRecentErrMsg = aclGetRecentErrMsg();                                \
+      if (aclRecentErrMsg != nullptr) {                                      \
+        printf("%s\n", aclRecentErrMsg);                                     \
+      } else {                                                               \
+        printf("Failed to get recent error message.\n");                     \
+      }                                                                      \
+      }                                                                      \
       exit(-1);                                                              \
     }                                                                        \
   } while (0)
@@ -310,7 +319,8 @@ struct NpuHelper {
       ACL_CHECK(aclrtSetDevice(dev_id));
       std::cout << "aclrtSetDevice(" << dev_id << ")\n";
     }
-    // aclrtSetExceptionInfoCallback(NpuHelper::ExceptionCallback);
+    ACL_CHECK(aclrtSetExceptionInfoCallback(NpuHelper::ExceptionCallback));
+    std::cout << "aclrtSetExceptionInfoCallback(" << &NpuHelper::ExceptionCallback << ")\n";
   }
   static void InitAllDevices() {
     ACL_CHECK(aclInit(nullptr));
@@ -319,7 +329,8 @@ struct NpuHelper {
       ACL_CHECK(aclrtSetDevice(dev_id));
       std::cout << "aclrtSetDevice(" << dev_id << ")\n";
     }
-    // aclrtSetExceptionInfoCallback(NpuHelper::ExceptionCallback);
+    ACL_CHECK(aclrtSetExceptionInfoCallback(NpuHelper::ExceptionCallback));
+    std::cout << "aclrtSetExceptionInfoCallback(" << &NpuHelper::ExceptionCallback << ")\n";
   }
   static void ReleaseAllDevices(const std::vector<int32_t>& devices) {
     for (auto dev_id : devices) {
@@ -344,6 +355,7 @@ struct NpuHelper {
     return count;
   }
   static void ExceptionCallback(aclrtExceptionInfo* exceptionInfo) {
+    std::cerr << "Enter NPU ExceptionCallback\n";
     auto deviceId = aclrtGetDeviceIdFromExceptionInfo(exceptionInfo);
     auto streamId = aclrtGetStreamIdFromExceptionInfo(exceptionInfo);
     auto taskId = aclrtGetTaskIdFromExceptionInfo(exceptionInfo);
@@ -367,7 +379,7 @@ struct NpuHelper {
     }
     aclDestroyTensorDesc(inputDesc);
     aclDestroyTensorDesc(outputDesc);
-    // print
+    std::cerr << "Exit NPU ExceptionCallback\n";
   }
   static void GetRecentErrorMessage() {
       const char *aclRecentErrMsg = nullptr;

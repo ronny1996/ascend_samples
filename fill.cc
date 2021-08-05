@@ -6,12 +6,25 @@ int main(int argc, char const* argv[]) {
   NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
   {
-    NpuTensor<double> out_tensor({2, 4});
+    NpuTensor<float> out_tensor({2, 4});
     {
       NpuRunner runner("FillV2D");
       runner.AddOutput(out_tensor)
       .SetAttr("value", 2.0f)
       .SetAttr("dims", {2, 4})
+          .Run();
+    }
+    out_tensor.print();
+  }
+  {
+    NpuTensor<double> out_tensor({2, 4});
+    NpuTensor<int32_t> dims({2}, {2, 4});
+    NpuTensor<double> value({1}, {2.0f});
+    {
+      NpuRunner runner("Fill");
+      runner.AddInput(dims)
+      .AddInput(value)
+      .AddOutput(out_tensor)
           .Run();
     }
     out_tensor.print();

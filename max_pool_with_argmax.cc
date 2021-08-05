@@ -3,14 +3,14 @@
 
 int main(int argc, char const* argv[]) {
   /* code */
-  NpuHelper::InitAllDevices({0, 1, 2, 3, 4, 5, 7});
-  NpuHelper::SetDevice(2);
-  #if 0
+  NpuHelper::InitAllDevices();
+  NpuHelper::SetDevice(0);
+  #if 1
   {
     int N = 1, C = 1, H = 8, W = 8;
     std::vector<int32_t> ksize({2, 2});
     std::vector<int32_t> strides({2, 2});
-    std::vector<int32_t> pads({1, 1});
+    std::vector<int32_t> pads({0, 0});
     auto Ho = (H + pads[0] * 2 - ksize[0]) / strides[0] + 1;
     auto Wo = (W + pads[1] * 2 - ksize[1]) / strides[1] + 1;
     std::vector<int64_t> x_shape({N, C, H, W});
@@ -19,14 +19,14 @@ int main(int argc, char const* argv[]) {
     NpuTensor<float> out_tensor(out_shape);
     NpuTensor<uint16_t> mask_tensor({N, C, Ho, Wo});
     {
-      NpuRunner runner("MaxPoolWithArgmaxV1", 2);
+      NpuRunner runner("MaxPoolWithArgmaxV2");
       runner.AddInput(x_tensor)
           .AddOutput(out_tensor)
           .AddOutput(mask_tensor)
           .SetAttr("ksize", {1, ksize[0], ksize[1], 1})
           .SetAttr("strides", {1, strides[0], strides[1], 1})
           .SetAttr("pads", {1, pads[0], pads[1], 1})
-          // .SetAttr("dtype", static_cast<int32_t>(AclDataType<int32_t>::type))
+          .SetAttr("dtype", static_cast<int32_t>(AclDataType<int32_t>::type))
           .SetAttr("dilation", {1, 1, 1, 1})
           .SetAttr("ceil_mode", false)
           .Run();
@@ -46,9 +46,9 @@ int main(int argc, char const* argv[]) {
     std::vector<int64_t> out_shape({N, C, Ho, Wo});
     NpuTensor<float> x_tensor(x_shape);
     NpuTensor<float> out_tensor(out_shape);
-    NpuTensor<uint16_t> mask_tensor({N, C, Ho, Wo});
+    NpuTensor<int64_t> mask_tensor({N, C, Ho, Wo});
     {
-      NpuRunner runner("MaxPoolWithArgmax", 2);
+      NpuRunner runner("MaxPoolWithArgmax");
       runner.AddInput(x_tensor)
           .AddOutput(out_tensor)
           .AddOutput(mask_tensor)
@@ -62,8 +62,9 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
     mask_tensor.print();
+
   }
   
-  NpuHelper::ReleaseAllDevices({0, 1, 2, 3, 4, 5, 7});
+  NpuHelper::ReleaseAllDevices();
   return 0;
 }

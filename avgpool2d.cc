@@ -5,6 +5,8 @@ int main(int argc, char const* argv[]) {
   /* code */
   NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
+
+  bool global_pool = false;
 #if 1 //bad
   std::vector<int64_t> ksize({1, 1, 3, 3});
   std::vector<int64_t> strides({1, 1, 1, 2});
@@ -16,9 +18,17 @@ int main(int argc, char const* argv[]) {
   std::vector<int64_t> pads({0, 0, 0, 0});
   std::vector<int64_t> x_shape({1, 1, 5, 5});
 #endif
+  // std::vector<int64_t> ksize({1, 1, 3, 3});
+  // std::vector<int64_t> strides({1, 1, 1, 1});
+  // std::vector<int64_t> pads({0, 0, 0, 0});
+  // std::vector<int64_t> x_shape({2, 3, 5, 5});
   auto Ho = (x_shape[2] + pads[0] + pads[1] - ksize[2]) / strides[2] + 1;
   auto Wo = (x_shape[3] + pads[2] + pads[3] - ksize[3]) / strides[3] + 1;
-  std::vector<int64_t> out_shape({1, 1, Ho, Wo}); // (n + 2p - k) / s + 1
+  if (global_pool) {
+    Ho = 1;
+    Wo = 1;   
+  }
+  std::vector<int64_t> out_shape({x_shape[0], x_shape[1], Ho, Wo}); // (n + 2p - k) / s + 1
   size_t x_numel = std::accumulate(x_shape.begin(), x_shape.end(), 1, std::multiplies<int64_t>());
   size_t out_numel = std::accumulate(out_shape.begin(), out_shape.end(), 1, std::multiplies<int64_t>());
   {
@@ -33,7 +43,7 @@ int main(int argc, char const* argv[]) {
           .SetAttr("padding_mode", "CALCULATED")
           .SetAttr("pads", pads)
           .SetAttr("data_format", "NCHW")  // data-format of ksize and strides.
-          .SetAttr("global_pooling", false)
+          .SetAttr("global_pooling", global_pool)
           .SetAttr("ceil_mode", false) // 0 - floor, 1 - ceil
           .SetAttr("exclusive", true)
           .Run();
@@ -57,7 +67,7 @@ int main(int argc, char const* argv[]) {
           .SetAttr("padding_mode", "CALCULATED")
           .SetAttr("pads", pads)
           .SetAttr("data_format", "NCHW")
-          .SetAttr("global_pooling", false)
+          .SetAttr("global_pooling", global_pool)
           .SetAttr("ceil_mode", false)
           .SetAttr("exclusive", true)
           .Run();

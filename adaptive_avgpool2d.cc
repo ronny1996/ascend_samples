@@ -44,6 +44,26 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
+
+  {
+    std::vector<int64_t> x_shape({2, 8, 8, 3});
+    std::vector<int64_t> x_shape_truncated({x_shape[1], x_shape[2]});
+    std::vector<int64_t> out_shape({2, 4, 4, 3});
+    std::vector<int64_t> out_shape_truncated({out_shape[1], out_shape[2]});
+
+    size_t x_numel = std::accumulate(x_shape.begin(), x_shape.end(), 1, std::multiplies<int64_t>());
+    size_t out_numel = std::accumulate(out_shape.begin(), out_shape.end(), 1, std::multiplies<int64_t>());
+    NpuTensor<float> x_tensor(x_shape, std::vector<float>(x_numel, 1.0f), ACL_FORMAT_NHWC);
+    NpuTensor<float> out_tensor(out_shape, ACL_FORMAT_NHWC);
+    { // test AdaptiveAvgPool2d
+      NpuRunner runner("AdaptiveAvgPool2d");
+      runner.AddInput(x_tensor)
+          .AddOutput(out_tensor)
+          .SetAttr("output_size", out_shape_truncated)
+          .Run();
+    }
+    out_tensor.print();
+  }
   NpuHelper::ReleaseAllDevices();
   return 0;
 }

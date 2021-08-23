@@ -156,34 +156,6 @@ int main(int argc, char const *argv[]) {
         NpuTensor<float> reserve_space_2(
             {x_shape[1]},
             std::vector<float>(x_shape[1], rand() % 10000 / 10000 - 0.5));
-
-        {
-          NpuRunner runner("BNTrainingReduce");
-          runner.AddInput(x_tensor)
-              .AddOutput(x_sum)
-              .AddOutput(x_square_sum)
-              .Run();
-        }
-        // x_sum.print();
-        // x_square_sum.print();
-        {
-          NpuRunner runner("BNTrainingUpdate");
-          runner.AddInput(x_tensor)
-              .AddInput(x_sum)
-              .AddInput(x_square_sum)
-              .AddInput(scale_tensor)
-              .AddInput(offset_tensor)
-              .AddInput(mean_tensor)  
-              .AddInput(variance_tensor) 
-              .AddOutput(out_tensor)
-              .AddOutput(reserve_space_1)  // mean_for_grad
-              .AddOutput(reserve_space_2)  // variance_for_grad
-              .AddOutput(batch_mean)
-              .AddOutput(batch_variance)
-              .SetAttr("epsilon", static_cast<float>(1e-7))
-              .SetAttr("factor", 0.8f)
-              .Run();
-        }
         {
           NpuRunner runner("BatchNorm");
           runner.AddInput(x_tensor)
@@ -200,7 +172,32 @@ int main(int argc, char const *argv[]) {
               .AddOutput(batch_variance)
               .SetAttr("epsilon", static_cast<float>(1e-4))
               .SetAttr("data_format", "NCHW")
-              .SetAttr("is_training", true)
+              .SetAttr("is_training", false)
+              .Run();
+        }
+        // NpuTensor<const float> momentum_tensor({1}, {1.0});
+        // {
+        //   NpuRunner runner("BNInference");
+        //   runner.AddInput(x_tensor)
+        //       .AddInput(mean_tensor)  // Must be"None" if the operation is used
+        //       .AddInput(variance_tensor)  // Must be"None" if the operation is
+        //       .AddInput(momentum_tensor)
+        //       .AddInput(scale_tensor)
+        //       .AddInput(offset_tensor)
+        //       .AddOutput(out_tensor)
+        //       .SetAttr("epsilon", static_cast<float>(1e-4))
+        //       .SetAttr("use_global_stats", true)
+        //       .Run();
+        // }
+        {
+          NpuRunner runner("BNInfer");
+          runner.AddInput(x_tensor)
+              .AddInput(scale_tensor)
+              .AddInput(offset_tensor)
+              .AddInput(mean_tensor)
+              .AddInput(variance_tensor)
+              .AddOutput(out_tensor)
+              .SetAttr("epsilon", static_cast<float>(1e-4))
               .Run();
         }
         // out_tensor.print();
@@ -208,69 +205,6 @@ int main(int argc, char const *argv[]) {
         // batch_variance.print();
         // reserve_space_1.print();
         // reserve_space_2.print();
-
-        NpuTensor<float> y_grad_tensor(x_shape, y_grad_data);
-        NpuTensor<float> x_grad_tensor(x_shape);
-        NpuTensor<float> scale_grad_tensor({x_shape[1]});
-        NpuTensor<float> offset_grad_tensor({x_shape[1]});
-        NpuTensor<float> reserve_space_3({x_shape[1]});
-        NpuTensor<float> reserve_space_4({x_shape[1]});
-
-        {
-          NpuRunner runner("BatchNormGrad");
-          runner.AddInput(y_grad_tensor)
-              .AddInput(x_tensor)
-              .AddInput(scale_tensor)
-              .AddInput(batch_mean)
-              .AddInput(batch_variance)
-              .AddOutput(x_grad_tensor)
-              .AddOutput(scale_grad_tensor)
-              .AddOutput(offset_grad_tensor)
-              .AddOutput(reserve_space_3)
-              .AddOutput(reserve_space_4)
-              .SetAttr("data_format", "NCHW")
-              .SetAttr("epsilon", 1e-7f)
-              .SetAttr("is_training", true)
-              .Run();
-        }
-        x_grad_tensor.sync();
-        scale_grad_tensor.sync();
-        offset_grad_tensor.sync();
-        {
-          NpuRunner runner("BNTrainingUpdateGrad");
-          runner.AddInput(y_grad_tensor)
-                .AddInput(x_tensor)
-                .AddInput(batch_mean)
-                .AddInput(batch_variance)
-                .AddOutput(scale_grad_tensor)
-                .AddOutput(offset_grad_tensor)
-                .SetAttr("epsilon", 1e-7f)
-                .Run();
-        }
-        {
-          NpuRunner runner("BNTrainingReduceGrad");
-          runner.AddInput(y_grad_tensor)
-                .AddInput(x_tensor)
-                .AddInput(scale_grad_tensor)
-                .AddInput(offset_grad_tensor)
-                .AddInput(scale_tensor)
-                .AddInput(batch_mean)
-                .AddInput(batch_variance)
-                .AddOutput(x_grad_tensor)
-                .SetAttr("epsilon", 1e-7f)
-                .Run();
-        }
-        x_grad_tensor.sync();
-        scale_grad_tensor.sync();
-        offset_grad_tensor.sync();
-        // for (auto i = 0; i < 10; i++) {
-        //   {
-        //     batch_norm_grad(y_grad_tensor, x_tensor, batch_mean,
-        //     batch_variance,
-        //                     scale_tensor, 1e-7f, x_grad_tensor,
-        //                     scale_grad_tensor, offset_grad_tensor);
-        //   }
-        // }
       }
     }
   }

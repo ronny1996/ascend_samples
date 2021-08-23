@@ -14,6 +14,8 @@ int main(int argc, char const *argv[]) {
     NpuHelper::Profiler profiler("/work/npu_prof/");
     {
       NpuTensor<float> x_tensor({x_shape}, x_data);
+
+
       NpuTensor<float> scale_tensor({x_shape[1]}, std::vector<float>(x_shape[1], rand() % 10000 / 10000 - 0.5));
       NpuTensor<float> offset_tensor({x_shape[1]}, std::vector<float>(x_shape[1], rand() % 10000 / 10000 - 0.5));
       NpuTensor<float> mean_tensor({x_shape[1]}, std::vector<float>(x_shape[1], rand() % 10000 / 10000 - 0.5));
@@ -24,6 +26,7 @@ int main(int argc, char const *argv[]) {
       NpuTensor<float> batch_variance({x_shape[1]}, std::vector<float>(x_shape[1], rand() % 10000 / 10000 - 0.5));
       NpuTensor<float> reserve_space_1({x_shape[1]}, std::vector<float>(x_shape[1], rand() % 10000 / 10000 - 0.5));
       NpuTensor<float> reserve_space_2({x_shape[1]}, std::vector<float>(x_shape[1], rand() % 10000 / 10000 - 0.5));
+
       {
         NpuRunner runner("BatchNorm");
         runner.AddInput(x_tensor)

@@ -144,11 +144,14 @@ struct NpuTensor : public AclTensor {
 
   NpuTensor(const std::vector<int64_t>& dims_, const std::vector<T>& data_,
             aclFormat format_ = ACL_FORMAT_NCHW,
-            aclMemType memtype_ = ACL_MEMTYPE_DEVICE)
+            aclMemType memtype_ = ACL_MEMTYPE_DEVICE,
+            aclDataType forcetype_ = ACL_DT_UNDEFINED)
       : host_data(data_), dims(dims_) {
     format = format_;
     memtype = memtype_;
-    desc = aclCreateTensorDesc(AclDataType<T>::type, dims.size(), dims.data(),
+
+    auto type_ = forcetype_ != ACL_DT_UNDEFINED? forcetype_: AclDataType<T>::type;
+    desc = aclCreateTensorDesc(type_, dims.size(), dims.data(),
                                format_);
     aclSetTensorStorageFormat(desc, format_);
     aclSetTensorStorageShape(desc, dims.size(), dims.data());

@@ -29,6 +29,18 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
   }
+  {
+    NpuTensor<float> out_tensor({64});
+    NpuTensor<float> value({1}, {2.0f});
+    {
+      NpuRunner runner("FillD");
+      runner.AddInput(value)
+      .AddOutput(out_tensor)
+      .SetAttr("dims", static_cast<int>(64))
+          .Run();
+    }
+    out_tensor.print();
+  }
   NpuHelper::ReleaseAllDevices();
   return 0;
 }

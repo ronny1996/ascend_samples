@@ -24,15 +24,22 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
     // dont need clear
-    NpuTensor<int32_t> index_tensor2({4, 3}, {0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0});
+  }
+
+  {
+    NpuTensor<float> x_tensor({4}, {1, 3, 5, -8});
+    NpuTensor<int32_t> index_tensor({12, 1}, {0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1});
+    NpuTensor<float> out_tensor({12});
+    NpuTensor<const int32_t> out_shape_tensor({1}, {12}, ACL_FORMAT_NCHW, ACL_MEMTYPE_HOST); 
     {
       NpuRunner runner("ScatterNd");
-      runner.AddInput(index_tensor2).AddInput(x_tensor)
+      runner.AddInput(index_tensor).AddInput(x_tensor)
           .AddInput(out_shape_tensor)
           .AddOutput(out_tensor)
           .Run();
     }
     out_tensor.print();
+    // dont need clear
   }
   NpuHelper::ReleaseAllDevices();
   return 0;

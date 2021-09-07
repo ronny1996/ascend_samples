@@ -56,6 +56,7 @@ int main(int argc, char const* argv[]) {
           .Run();
     }
     #endif
+    x_tensor.print();
     out_tensor.print();
     indices_tesnor.print();
     NpuTensor<int64_t> indices({3, k});
@@ -64,6 +65,17 @@ int main(int argc, char const* argv[]) {
       runner.AddInput(indices_tesnor).AddOutput(indices).SetAttr("dst_type", static_cast<int32_t>(AclDataType<int64_t>::type)).Run();
     }
     indices.print();
+
+    NpuTensor<float> out({12, k});
+    {
+      NpuRunner runner("GatherV2D");
+      runner.AddInput(x_tensor)
+          .AddInput(indices_tesnor)
+          .AddOutput(out)
+          .SetAttr("axis", 1)
+          .Run();
+    }
+    out.print();
   }
   NpuHelper::ReleaseAllDevices();
   return 0;

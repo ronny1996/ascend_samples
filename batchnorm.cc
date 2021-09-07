@@ -114,7 +114,7 @@ int main(int argc, char const *argv[]) {
   NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
   {
-    NpuHelper::Profiler profiler("./npu_prof/");
+    // NpuHelper::Profiler profiler("./npu_prof/");
     {
       for (auto i = 0; i < 10; i++) {
         std::cout << i << std::endl;
@@ -219,15 +219,15 @@ int main(int argc, char const *argv[]) {
         {
           NpuRunner runner("BatchNormGrad");
           runner.AddInput(y_grad_tensor)
-              .AddInput(x_tensor)
-              .AddInput(scale_tensor)
-              .AddInput(batch_mean)
-              .AddInput(batch_variance)
-              .AddOutput(x_grad_tensor)
-              .AddOutput(scale_grad_tensor)
-              .AddOutput(offset_grad_tensor)
-              .AddOutput(reserve_space_3)
-              .AddOutput(reserve_space_4)
+              .AddInput(x_tensor)       // 3, 32, 112, 112
+              .AddInput(scale_tensor)   // 32
+              .AddInput(batch_mean)     // 32
+              .AddInput(batch_variance) // 32
+              .AddOutput(x_grad_tensor) // 3, 32, 112, 112
+              .AddOutput(scale_grad_tensor)// 32
+              .AddOutput(offset_grad_tensor)// 32
+              // .AddOutput(reserve_space_3)
+              // .AddOutput(reserve_space_4)
               .SetAttr("data_format", "NCHW")
               .SetAttr("epsilon", 1e-7f)
               .SetAttr("is_training", true)

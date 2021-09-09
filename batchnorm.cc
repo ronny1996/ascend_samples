@@ -226,8 +226,8 @@ int main(int argc, char const *argv[]) {
               .AddOutput(x_grad_tensor) // 3, 32, 112, 112
               .AddOutput(scale_grad_tensor)// 32
               .AddOutput(offset_grad_tensor)// 32
-              // .AddOutput(reserve_space_3)
-              // .AddOutput(reserve_space_4)
+              .AddOutput(reserve_space_3)
+              .AddOutput(reserve_space_4)
               .SetAttr("data_format", "NCHW")
               .SetAttr("epsilon", 1e-7f)
               .SetAttr("is_training", true)

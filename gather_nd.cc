@@ -29,9 +29,13 @@ int main(int argc, char const* argv[]) {
   NpuHelper::InitAllDevices();
   NpuHelper::SetDevice(0);
   {
-    NpuTensor<float> x_tensor({8}, {1, 2, 3, -4, 5, -6, 7, -8});
-    NpuTensor<int64_t> index_tensor({2}, {1, 0});
-    NpuTensor<float> out_tensor({2});
+    std::vector<float> x_data;
+    for (auto i = 0; i < 2 * 3 * 4; i++) {
+      x_data.push_back(i);
+    }
+    NpuTensor<float> x_tensor({2, 3, 4}, x_data);
+    NpuTensor<int64_t> index_tensor({1, 2}, {0, 2});
+    NpuTensor<float> out_tensor({4});
     {
       NpuRunner runner("GatherV2D");
       runner.AddInput(x_tensor)
@@ -42,7 +46,7 @@ int main(int argc, char const* argv[]) {
     }
     out_tensor.print();
 
-    gather_elements_op(x_tensor, index_tensor);
+    // gather_elements_op(x_tensor, index_tensor);
   }
   NpuHelper::ReleaseAllDevices();
   return 0;

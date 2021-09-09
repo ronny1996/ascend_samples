@@ -42,7 +42,7 @@ int main(int argc, char const* argv[]) {
 
       {
         NpuGuard guard(0);
-        auto builder = NpuRunner::Builder("MaxPoolWithArgmaxV1").AddInput(x_tensor).AddOutput(out_tensor).AddOutput(mask_tensor);
+        auto builder = NpuRunner::Builder("MaxPoolWithArgmaxV2").AddInput(x_tensor).AddOutput(out_tensor).AddOutput(mask_tensor);
         NpuRunner runner(builder);
         runner.SetAttr("ksize", {1, ksize[0], ksize[1], 1})
           .SetAttr("strides", {1, strides[0], strides[1], 1})

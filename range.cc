@@ -9,8 +9,8 @@ int main(int argc, char const* argv[]) {
     {
       NpuTensor<int64_t> start({1}, {0});
       NpuTensor<int64_t> end({1}, {10});
-      NpuTensor<int64_t> delta({1}, {2});
-      NpuTensor<int64_t> out_tensor({5});
+      NpuTensor<int64_t> delta({1}, {1});
+      NpuTensor<int64_t> out_tensor({2, 5});
       {
         NpuRunner runner("Range");
         runner.AddInput(start).AddInput(end).AddInput(delta)
